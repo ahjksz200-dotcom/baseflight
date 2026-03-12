@@ -1,0 +1,19 @@
+name: Build Baseflight
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install ARM GCC
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+      - name: Make
+        run: make
+      - name: Upload Firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: baseflight-firmware
+          path: obj/*.hex
+          
