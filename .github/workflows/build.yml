@@ -1,0 +1,33 @@
+name: Build Baseflight BluePill 128KB
+
+on: 
+  push:
+    branches: [ master, main ]
+  workflow_dispatch: # Cho phép bạn bấm nút "Run workflow" thủ công
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install ARM Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi make
+
+      - name: Build Firmware
+        run: |
+          # Build cho target NAZE (Cấu hình chúng ta đã sửa trong board.h)
+          make TARGET=NAZE
+          
+          # Chuyển đổi file .elf sang .bin để nạp bằng ZFlasher (Android)
+          # Lưu ý: Tên file .elf có thể là baseflight.elf hoặc obj/baseflight_NAZE.elf tùy version
+          arm-none-eabi-objcopy -O binary obj/baseflight_NAZE.elf baseflight_bluepill.bin
+
+      - name: Upload Firmware Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Baseflight-Firmware-128K
+          path: baseflight_bluepill.bin
