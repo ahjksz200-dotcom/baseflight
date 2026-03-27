@@ -37,7 +37,7 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-// --- 1. ĐỊNH NGHĨA TẤT CẢ CÁC KIỂU DỮ LIỆU (KHÔNG THỂ THIẾU) ---
+// --- 1. ĐỊNH NGHĨA TẤT CẢ CÁC KIỂU DỮ LIỆU ---
 
 typedef enum HardwareRevision {
     NAZE32 = 1,
@@ -64,13 +64,12 @@ typedef enum {
     CW270_DEG_FLIP = 8
 } sensor_align_e;
 
-// Định nghĩa các Function Pointers quan trọng
 typedef void (*sensorInitFuncPtr)(sensor_align_e align);
 typedef void (*sensorReadFuncPtr)(int16_t *data);
 typedef void (*baroOpFuncPtr)(void);
 typedef void (*baroCalculateFuncPtr)(int32_t *pressure, int32_t *temperature);
 typedef void (*serialReceiveCallbackPtr)(uint16_t data);
-typedef uint16_t (*rcReadRawDataPtr)(uint8_t chan); // <--- FIX LỖI MW.H TẠI ĐÂY
+typedef uint16_t (*rcReadRawDataPtr)(uint8_t chan);
 typedef void (*pidControllerFuncPtr)(void);
 
 typedef struct sensor_t {
@@ -104,12 +103,12 @@ typedef enum {
 #if defined(NAZE)
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13      // LED Blue Pill PC13
+#define LED0_PIN    Pin_13      // LED chính Blue Pill
 #define LED1_GPIO   GPIOC 
-#define LED1_PIN    Pin_13 
+#define LED1_PIN    Pin_13      // Ép LED1 dùng chung chân PC13 để fix lỗi Driver La bàn
 
 #define BEEP_GPIO   GPIOA
-#define BEEP_PIN    Pin_15      // Dời khỏi PA12 (USB)
+#define BEEP_PIN    Pin_15      
 
 #define BARO_GPIO   GPIOB
 #define BARO_PIN    Pin_2 
@@ -121,6 +120,7 @@ typedef enum {
 #define GPS
 #define BUZZER
 #define LED0
+#define LED1                    // PHẢI CÓ DÒNG NÀY ĐỂ MACRO LED1_TOGGLE HOẠT ĐỘNG
 #define MOTOR_PWM_RATE 400
 
 #define SENSORS_SET (SENSOR_ACC | SENSOR_BARO | SENSOR_MAG)
@@ -155,6 +155,12 @@ typedef enum {
 #define LED0_TOGGLE              digitalToggle(LED0_GPIO, LED0_PIN);
 #define LED0_OFF                 digitalHi(LED0_GPIO, LED0_PIN);
 #define LED0_ON                  digitalLo(LED0_GPIO, LED0_PIN);
+#endif
+
+#ifdef LED1
+#define LED1_TOGGLE              digitalToggle(LED1_GPIO, LED1_PIN);
+#define LED1_OFF                 digitalHi(LED1_GPIO, LED1_PIN);
+#define LED1_ON                  digitalLo(LED1_GPIO, LED1_PIN);
 #endif
 
 #ifdef BEEP_GPIO
