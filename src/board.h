@@ -37,7 +37,7 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-// --- 1. ĐỊNH NGHĨA CÁC ENUM VÀ STRUCT TRƯỚC (QUAN TRỌNG ĐỂ KHÔNG LỖI) ---
+// --- 1. ĐỊNH NGHĨA CÁC ENUM VÀ STRUCT TRƯỚC (PHẢI ĐẦY ĐỦ ĐỂ KHÔNG LỖI) ---
 
 typedef enum HardwareRevision {
     NAZE32 = 1,
@@ -45,6 +45,12 @@ typedef enum HardwareRevision {
     NAZE32_SP,
     NAZE32_REV6,
 } HardwareRevision;
+
+typedef enum {
+    X = 0,
+    Y,
+    Z
+} sensor_axis_e;
 
 typedef enum {
     ALIGN_DEFAULT = 0,
@@ -91,12 +97,12 @@ typedef enum {
 #if defined(NAZE)
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13      // LED Blue Pill (PC13)
+#define LED0_PIN    Pin_13      // LED Blue Pill
 #define LED1_GPIO   GPIOC 
-#define LED1_PIN    Pin_13      // Blue Pill chỉ có 1 LED, gán trùng PC13 luôn
+#define LED1_PIN    Pin_13 
 
 #define BEEP_GPIO   GPIOA
-#define BEEP_PIN    Pin_15      // Dời khỏi PA12 để giải phóng chân USB
+#define BEEP_PIN    Pin_15      // Cứu chân USB PA12
 
 #define BARO_GPIO   GPIOB
 #define BARO_PIN    Pin_2 
@@ -111,9 +117,9 @@ typedef enum {
 #define MOTOR_PWM_RATE 400
 
 #define SENSORS_SET (SENSOR_ACC | SENSOR_BARO | SENSOR_MAG)
-#define I2C_DEVICE (I2CDEV_2)   // Dùng I2C2 (PB10, PB11)
+#define I2C_DEVICE (I2CDEV_2)   // Dùng I2C2 cho Blue Pill
 
-// --- 3. GỌI CÁC DRIVER SAU KHI ĐÃ ĐỊNH NGHĨA XONG HẾT TYPE ---
+// --- 3. GỌI CÁC DRIVER ---
 #include "drv_adc.h"
 #include "drv_adxl345.h"
 #include "drv_bma280.h"
