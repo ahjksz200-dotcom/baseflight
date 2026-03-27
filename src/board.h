@@ -37,68 +37,50 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-#define U_ID_0 (*(uint32_t*)0x1FFFF7E8)
-#define U_ID_1 (*(uint32_t*)0x1FFFF7EC)
-#define U_ID_2 (*(uint32_t*)0x1FFFF7F0)
-
-typedef enum HardwareRevision {
-    NAZE32 = 1,
-    NAZE32_REV5,
-    NAZE32_SP,
-    NAZE32_REV6,
-} HardwareRevision;
+// --- 1. ĐỊNH NGHĨA CÁC KIỂU DỮ LIỆU TRƯỚC (QUAN TRỌNG) ---
 
 typedef enum {
-    SENSOR_GYRO = 1 << 0,
-    SENSOR_ACC = 1 << 1,
-    SENSOR_BARO = 1 << 2,
-    SENSOR_MAG = 1 << 3,
-    SENSOR_SONAR = 1 << 4,
-    SENSOR_GPS = 1 << 5,
-    SENSOR_GPSMAG = 1 << 6,
-} AvailableSensors;
+    ALIGN_DEFAULT = 0,
+    CW0_DEG = 1,
+    CW90_DEG = 2,
+    CW180_DEG = 3,
+    CW270_DEG = 4,
+    CW0_DEG_FLIP = 5,
+    CW90_DEG_FLIP = 6,
+    CW180_DEG_FLIP = 7,
+    CW270_DEG_FLIP = 8
+} sensor_align_e;
 
-typedef enum AccelSensors {
-    ACC_DEFAULT = 0,
-    ACC_ADXL345 = 1,
-    ACC_MPU6050 = 2,
-    ACC_MMA8452 = 3,
-    ACC_BMA280 = 4,
-    ACC_MPU6500 = 5,
-    ACC_NONE = 6
-} AccelSensors;
+typedef struct sensor_t {
+    void (*init)(sensor_align_e align);
+    void (*read)(int16_t *data);
+    void (*temperature)(int16_t *data);
+    float scale;
+} sensor_t;
 
-typedef enum CompassSensors {
-    MAG_DEFAULT = 0,
-    MAG_HMC5883L = 1,
-    MAG_AK8975 = 2,
-    MAG_NONE = 3
-} CompassSensors;
+typedef struct baro_t {
+    uint16_t ut_delay;
+    uint16_t up_delay;
+    void (*start_ut)(void);
+    void (*get_ut)(void);
+    void (*start_up)(void);
+    void (*get_up)(void);
+    void (*calculate)(int32_t *pressure, int32_t *temperature);
+} baro_t;
 
-typedef enum {
-    FEATURE_PPM = 1 << 0,
-    FEATURE_VBAT = 1 << 1,
-    FEATURE_SERIALRX = 1 << 3,
-    FEATURE_MOTOR_STOP = 1 << 4,
-    FEATURE_GPS = 1 << 8,
-    FEATURE_FAILSAFE = 1 << 9,
-    FEATURE_TELEMETRY = 1 << 11,
-} AvailableFeatures;
+typedef void (*serialReceiveCallbackPtr)(uint16_t data);
 
-// --- PINOUT DEFINITION FOR BLUE PILL ---
+// --- 2. CẤU HÌNH PINOUT CHO BLUE PILL ---
 #if defined(NAZE)
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13      // LED Blue Pill nằm ở PC13
-// Vô hiệu hóa LED1 vì Blue Pill chỉ có 1 LED chính
+#define LED0_PIN    Pin_13      // LED Blue Pill
 #define LED1_GPIO   GPIOC 
 #define LED1_PIN    Pin_13 
 
-// Giải phóng PA12 (USB) - Dời Beeper sang PA15
 #define BEEP_GPIO   GPIOA
-#define BEEP_PIN    Pin_15 
+#define BEEP_PIN    Pin_15      // Dời khỏi PA12 để cứu USB
 
-// Giải phóng PC13 khỏi chức năng BARO cũ của Naze
 #define BARO_GPIO   GPIOB
 #define BARO_PIN    Pin_2 
 
@@ -112,10 +94,9 @@ typedef enum {
 #define MOTOR_PWM_RATE 400
 
 #define SENSORS_SET (SENSOR_ACC | SENSOR_BARO | SENSOR_MAG)
-
-// Sử dụng I2C2 (PB10, PB11) cho MPU6500/6050
 #define I2C_DEVICE (I2CDEV_2) 
 
+// --- 3. GỌI CÁC DRIVER SAU KHI ĐÃ CÓ TYPEDEF ---
 #include "drv_adc.h"
 #include "drv_adxl345.h"
 #include "drv_bma280.h"
@@ -138,7 +119,7 @@ typedef enum {
 #error TARGET NOT DEFINED!
 #endif
 
-// Macros điều khiển LED (Blue Pill LED là Active Low - Kéo xuống GND là sáng)
+// --- 4. CÁC HELPFUL MACROS ---
 #ifdef LED0
 #define LED0_TOGGLE              digitalToggle(LED0_GPIO, LED0_PIN);
 #define LED0_OFF                 digitalHi(LED0_GPIO, LED0_PIN);
