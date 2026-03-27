@@ -37,7 +37,14 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-// --- 1. ĐỊNH NGHĨA CÁC KIỂU DỮ LIỆU TRƯỚC (QUAN TRỌNG) ---
+// --- 1. ĐỊNH NGHĨA CÁC ENUM VÀ STRUCT TRƯỚC (QUAN TRỌNG ĐỂ KHÔNG LỖI) ---
+
+typedef enum HardwareRevision {
+    NAZE32 = 1,
+    NAZE32_REV5,
+    NAZE32_SP,
+    NAZE32_REV6,
+} HardwareRevision;
 
 typedef enum {
     ALIGN_DEFAULT = 0,
@@ -70,16 +77,26 @@ typedef struct baro_t {
 
 typedef void (*serialReceiveCallbackPtr)(uint16_t data);
 
+typedef enum {
+    SENSOR_GYRO = 1 << 0,
+    SENSOR_ACC = 1 << 1,
+    SENSOR_BARO = 1 << 2,
+    SENSOR_MAG = 1 << 3,
+    SENSOR_SONAR = 1 << 4,
+    SENSOR_GPS = 1 << 5,
+    SENSOR_GPSMAG = 1 << 6,
+} AvailableSensors;
+
 // --- 2. CẤU HÌNH PINOUT CHO BLUE PILL ---
 #if defined(NAZE)
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13      // LED Blue Pill
+#define LED0_PIN    Pin_13      // LED Blue Pill (PC13)
 #define LED1_GPIO   GPIOC 
-#define LED1_PIN    Pin_13 
+#define LED1_PIN    Pin_13      // Blue Pill chỉ có 1 LED, gán trùng PC13 luôn
 
 #define BEEP_GPIO   GPIOA
-#define BEEP_PIN    Pin_15      // Dời khỏi PA12 để cứu USB
+#define BEEP_PIN    Pin_15      // Dời khỏi PA12 để giải phóng chân USB
 
 #define BARO_GPIO   GPIOB
 #define BARO_PIN    Pin_2 
@@ -94,9 +111,9 @@ typedef void (*serialReceiveCallbackPtr)(uint16_t data);
 #define MOTOR_PWM_RATE 400
 
 #define SENSORS_SET (SENSOR_ACC | SENSOR_BARO | SENSOR_MAG)
-#define I2C_DEVICE (I2CDEV_2) 
+#define I2C_DEVICE (I2CDEV_2)   // Dùng I2C2 (PB10, PB11)
 
-// --- 3. GỌI CÁC DRIVER SAU KHI ĐÃ CÓ TYPEDEF ---
+// --- 3. GỌI CÁC DRIVER SAU KHI ĐÃ ĐỊNH NGHĨA XONG HẾT TYPE ---
 #include "drv_adc.h"
 #include "drv_adxl345.h"
 #include "drv_bma280.h"
