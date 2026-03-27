@@ -37,18 +37,9 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-#define U_ID_0 (*(uint32_t*)0x1FFFF7E8)
-#define U_ID_1 (*(uint32_t*)0x1FFFF7EC)
-#define U_ID_2 (*(uint32_t*)0x1FFFF7F0)
-
-// --- 1. ENUMS & TYPEDEFS (Đầy đủ để fix lỗi Telemetry) ---
-
-typedef enum HardwareRevision {
-    NAZE32 = 1, NAZE32_REV5, NAZE32_SP, NAZE32_REV6,
-} HardwareRevision;
-
+// --- 1. CORE TYPES & ENUMS ---
+typedef enum HardwareRevision { NAZE32 = 1, NAZE32_REV5, NAZE32_SP, NAZE32_REV6 } HardwareRevision;
 typedef enum { X = 0, Y, Z } sensor_axis_e;
-
 typedef enum {
     ALIGN_DEFAULT = 0, CW0_DEG, CW90_DEG, CW180_DEG, CW270_DEG,
     CW0_DEG_FLIP, CW90_DEG_FLIP, CW180_DEG_FLIP, CW270_DEG_FLIP
@@ -67,28 +58,20 @@ typedef enum {
     FEATURE_POWERMETER = 1 << 12, FEATURE_VARIO = 1 << 13, FEATURE_3D = 1 << 14,
 } AvailableFeatures;
 
-// Telemetry Enums (FIX LỖI telemetry_common.c)
-typedef enum {
-    TELEMETRY_PROVIDER_FRSKY = 0,
-    TELEMETRY_PROVIDER_HOTT,
-    TELEMETRY_PROVIDER_MAX = TELEMETRY_PROVIDER_HOTT
-} TelemetryProvider;
+// Định nghĩa Hardware Sensors (FIX LỖI CLI.C)
+typedef enum AccelSensors { ACC_DEFAULT = 0, ACC_ADXL345, ACC_MPU6050, ACC_MMA8452, ACC_BMA280, ACC_MPU6500, ACC_NONE } AccelSensors;
+typedef enum CompassSensors { MAG_DEFAULT = 0, MAG_HMC5883L, MAG_AK8975, MAG_NONE } CompassSensors;
 
-typedef enum {
-    TELEMETRY_PORT_UART = 0,
-    TELEMETRY_PORT_SOFTSERIAL_1,
-    TELEMETRY_PORT_SOFTSERIAL_2,
-    TELEMETRY_PORT_MAX = TELEMETRY_PORT_SOFTSERIAL_2
-} TelemetryPort;
+// Telemetry & Serial
+typedef enum { TELEMETRY_PROVIDER_FRSKY = 0, TELEMETRY_PROVIDER_HOTT, TELEMETRY_PROVIDER_MAX = TELEMETRY_PROVIDER_HOTT } TelemetryProvider;
+typedef enum { TELEMETRY_PORT_UART = 0, TELEMETRY_PORT_SOFTSERIAL_1, TELEMETRY_PORT_SOFTSERIAL_2 } TelemetryPort;
+typedef enum { SERIALRX_SPEKTRUM1024 = 0, SERIALRX_SPEKTRUM2048, SERIALRX_SBUS, SERIALRX_SUMD, SERIALRX_MSP, SERIALRX_IBUS, SERIALRX_PROVIDER_MAX = SERIALRX_IBUS } SerialRXType;
 
-typedef enum {
-    GPS_NMEA = 0, GPS_UBLOX, GPS_MTK_NMEA, GPS_MTK_BINARY, GPS_MAG_BINARY,
-} GPSHardware;
+// GPS (FIX LỖI CLI.C)
+typedef enum { GPS_NMEA = 0, GPS_UBLOX, GPS_MTK_NMEA, GPS_MTK_BINARY, GPS_MAG_BINARY, GPS_HARDWARE_MAX = GPS_MAG_BINARY } GPSHardware;
+typedef enum { GPS_BAUD_115200 = 0, GPS_BAUD_57600, GPS_BAUD_38400, GPS_BAUD_19200, GPS_BAUD_9600, GPS_BAUD_MAX = GPS_BAUD_9600 } GPSBaudRates;
 
-typedef enum {
-    GPS_BAUD_115200 = 0, GPS_BAUD_57600, GPS_BAUD_38400, GPS_BAUD_19200, GPS_BAUD_9600, GPS_BAUD_MAX = GPS_BAUD_9600
-} GPSBaudRates;
-
+// Function Pointers
 typedef void (*sensorInitFuncPtr)(sensor_align_e align);
 typedef void (*sensorReadFuncPtr)(int16_t *data);
 typedef void (*baroOpFuncPtr)(void);
@@ -110,9 +93,8 @@ typedef struct baro_t {
     baroCalculateFuncPtr calculate;
 } baro_t;
 
-// --- 2. PINOUT CHO BLUE PILL ---
+// --- 2. BLUE PILL PINOUT ---
 #if defined(NAZE)
-
 #define LED0_GPIO   GPIOC
 #define LED0_PIN    Pin_13
 #define LED1_GPIO   GPIOC 
@@ -166,18 +148,13 @@ typedef struct baro_t {
 #endif
 
 // --- 4. MACROS ---
-#ifdef LED0
 #define LED0_TOGGLE digitalToggle(LED0_GPIO, LED0_PIN);
 #define LED0_OFF    digitalHi(LED0_GPIO, LED0_PIN);
 #define LED0_ON     digitalLo(LED0_GPIO, LED0_PIN);
-#endif
-#ifdef LED1
 #define LED1_TOGGLE digitalToggle(LED1_GPIO, LED1_PIN);
 #define LED1_OFF    digitalHi(LED1_GPIO, LED1_PIN);
 #define LED1_ON     digitalLo(LED1_GPIO, LED1_PIN);
-#endif
-#ifdef BEEP_GPIO
+
 #define BEEP_TOGGLE digitalToggle(BEEP_GPIO, BEEP_PIN);
 #define BEEP_OFF    systemBeep(false);
 #define BEEP_ON     systemBeep(true);
-#endif
