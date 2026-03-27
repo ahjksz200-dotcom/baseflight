@@ -37,7 +37,7 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-// --- 1. ĐỊNH NGHĨA CÁC ENUM VÀ STRUCT TRƯỚC (PHẢI ĐẦY ĐỦ ĐỂ KHÔNG LỖI) ---
+// --- 1. ĐỊNH NGHĨA TẤT CẢ CÁC KIỂU DỮ LIỆU (KHÔNG THỂ THIẾU) ---
 
 typedef enum HardwareRevision {
     NAZE32 = 1,
@@ -64,24 +64,31 @@ typedef enum {
     CW270_DEG_FLIP = 8
 } sensor_align_e;
 
+// Định nghĩa các Function Pointers quan trọng
+typedef void (*sensorInitFuncPtr)(sensor_align_e align);
+typedef void (*sensorReadFuncPtr)(int16_t *data);
+typedef void (*baroOpFuncPtr)(void);
+typedef void (*baroCalculateFuncPtr)(int32_t *pressure, int32_t *temperature);
+typedef void (*serialReceiveCallbackPtr)(uint16_t data);
+typedef uint16_t (*rcReadRawDataPtr)(uint8_t chan); // <--- FIX LỖI MW.H TẠI ĐÂY
+typedef void (*pidControllerFuncPtr)(void);
+
 typedef struct sensor_t {
-    void (*init)(sensor_align_e align);
-    void (*read)(int16_t *data);
-    void (*temperature)(int16_t *data);
+    sensorInitFuncPtr init;
+    sensorReadFuncPtr read;
+    sensorReadFuncPtr temperature;
     float scale;
 } sensor_t;
 
 typedef struct baro_t {
     uint16_t ut_delay;
     uint16_t up_delay;
-    void (*start_ut)(void);
-    void (*get_ut)(void);
-    void (*start_up)(void);
-    void (*get_up)(void);
-    void (*calculate)(int32_t *pressure, int32_t *temperature);
+    baroOpFuncPtr start_ut;
+    baroOpFuncPtr get_ut;
+    baroOpFuncPtr start_up;
+    baroOpFuncPtr get_up;
+    baroCalculateFuncPtr calculate;
 } baro_t;
-
-typedef void (*serialReceiveCallbackPtr)(uint16_t data);
 
 typedef enum {
     SENSOR_GYRO = 1 << 0,
@@ -97,12 +104,12 @@ typedef enum {
 #if defined(NAZE)
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13      // LED Blue Pill
+#define LED0_PIN    Pin_13      // LED Blue Pill PC13
 #define LED1_GPIO   GPIOC 
 #define LED1_PIN    Pin_13 
 
 #define BEEP_GPIO   GPIOA
-#define BEEP_PIN    Pin_15      // Cứu chân USB PA12
+#define BEEP_PIN    Pin_15      // Dời khỏi PA12 (USB)
 
 #define BARO_GPIO   GPIOB
 #define BARO_PIN    Pin_2 
@@ -117,7 +124,7 @@ typedef enum {
 #define MOTOR_PWM_RATE 400
 
 #define SENSORS_SET (SENSOR_ACC | SENSOR_BARO | SENSOR_MAG)
-#define I2C_DEVICE (I2CDEV_2)   // Dùng I2C2 cho Blue Pill
+#define I2C_DEVICE (I2CDEV_2)
 
 // --- 3. GỌI CÁC DRIVER ---
 #include "drv_adc.h"
@@ -137,6 +144,7 @@ typedef enum {
 #include "drv_serial.h"
 #include "drv_uart.h"
 #include "drv_softserial.h"
+#include "drv_hcsr04.h"
 
 #else
 #error TARGET NOT DEFINED!
